@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import { sequelize } from "@/config/sequelize";
-import UserModel from "@/models/user.model";
-import RefreshTokenModel from "@/models/refreshToken.model";
+import { sequelize } from "@config/sequelize";
+import UserModel from "@models/user.model";
+import RefreshTokenModel from "@models/refreshToken.model";
 import { v4 as uuidv4 } from "uuid";
 
 const SALT_ROUNDS = 10;

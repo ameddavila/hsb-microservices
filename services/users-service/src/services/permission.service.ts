@@ -1,3 +1,4 @@
+
 import PermissionModel from "@/models/permission.model";
 
 export class PermissionService {

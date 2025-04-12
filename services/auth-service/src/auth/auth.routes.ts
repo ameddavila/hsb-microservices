@@ -1,6 +1,6 @@
 // src/routes/auth.routes.ts
 import { Router } from "express";
-import { login, refresh, logout } from "@controllers/auth.controller";
+import { login, refresh, logout } from "src/auth/auth.controller";
 import { verifyCsrfToken } from "@middlewares/csrf.middleware";
 
 const router = Router();

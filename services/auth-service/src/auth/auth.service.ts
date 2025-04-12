@@ -7,7 +7,7 @@ import {
   CreateUserSchema,
   UpdateUserSchema,
   UserIdParamSchema,
-} from "@validators/user.validator";
+} from "src/auth/auth.validator";
 import RefreshTokenModel from "@models/refreshToken.model";
 
 type CreateUserInput = z.infer<typeof CreateUserSchema>;

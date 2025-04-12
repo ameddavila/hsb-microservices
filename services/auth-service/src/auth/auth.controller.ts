@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { UserService } from "@services/user.service";
+import { UserService } from "src/auth/auth.service";
 import {
   generateAccessToken,
   generateRefreshToken,
   generateCsrfToken,
-} from "@utils/token.util";
+} from "@utils/token";
 
 // ✅ Validación de entrada con Zod
 const LoginSchema = z.object({

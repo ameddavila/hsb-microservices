@@ -52,4 +52,27 @@ export class UserService {
     await UserRoleModel.create({ userId, roleId });
     return { message: "Rol asignado correctamente" };
   }
+
+  static async getUserPermissions(userId: string): Promise<string[]> {
+    const user = await UserModel.findByPk(userId, {
+      include: {
+        model: RoleModel,
+        include: ['permissions'], // Asegúrate de que la asociación esté definida como 'permissions' en el modelo
+      },
+    });
+  
+    if (!user || !user.roles) return [];
+  
+    const permissions = new Set<string>();
+  
+    for (const role of user.roles) {
+      const rolePermissions = await role.getPermissions(); // Sequelize magic method
+      for (const perm of rolePermissions) {
+        permissions.add(`${perm.action}:${perm.module}`);
+      }
+    }
+  
+    return Array.from(permissions);
+  }
+  
 }
