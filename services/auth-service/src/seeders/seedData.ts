@@ -1,3 +1,4 @@
+// src/seeders/seedData.ts
 import bcrypt from "bcrypt";
 import { sequelize } from "@config/sequelize";
 import UserModel from "@models/user.model";
@@ -14,24 +15,21 @@ async function seedAdminUser() {
     const exists = await UserModel.findOne({ where: { email: "admin@admin.com" } });
 
     if (exists) {
-      console.log("⚠️ Usuario admin ya existe.");
+      console.log("⚠️ El usuario admin ya existe.");
       return;
     }
 
     const hashedPassword = await bcrypt.hash("Admin1234!", SALT_ROUNDS);
 
     const adminUser = await UserModel.create({
+      id: uuidv4(),
       username: "admin",
       email: "admin@admin.com",
-      dni: "99999999",
-      firstName: "Super",
-      lastName: "Admin",
       password: hashedPassword,
-      isActive: true,
+      //dni: "99999999", // ✅ añadido
     });
 
-    // Refresh Token opcional
-    const refreshToken = uuidv4(); // o usa generateRefreshToken()
+    const refreshToken = uuidv4();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 días
 
     await RefreshTokenModel.create({

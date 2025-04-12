@@ -1,17 +1,24 @@
-// src/routes/auth.routes.ts
 import { Router } from "express";
-import { login, refresh, logout } from "src/auth/auth.controller";
-import { verifyCsrfToken } from "@middlewares/csrf.middleware";
+import {
+  login,
+  refresh,
+  logout,
+  verifyToken,
+} from "./auth.controller";
+import { verifyCsrfToken } from "@middlewares/csrf.middleware"; // Usa alias si está configurado
 
 const router = Router();
 
-// Login: Emite tokens (no requiere CSRF)
+// 🔐 Login: genera access + refresh + csrf tokens
 router.post("/login", login);
 
-// Refresh token: requiere verificación CSRF (el middleware puede ubicarse aquí o en el controlador)
+// 🔄 Refresh: requiere refresh token válido + CSRF
 router.post("/refresh", verifyCsrfToken, refresh);
 
-// Logout
+// 🚪 Logout: invalida refresh token y elimina cookies
 router.post("/logout", logout);
+
+// ✅ Verificación externa del access token (uso por otros microservicios)
+router.post("/verify-token", verifyToken);
 
 export default router;

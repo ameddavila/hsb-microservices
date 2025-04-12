@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "defaultsecret";
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -28,7 +28,7 @@ export const authenticateToken = (
   }
 
   if (!csrfToken || !csrfHeader || csrfToken !== String(csrfHeader)) {
-    return res.status(403).json({ error: "CSRF token inválido" });
+    return res.status(403).json({ error: "CSRF token inválidoaaaa" });
   }
 
   try {

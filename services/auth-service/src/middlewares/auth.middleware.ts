@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "defaultsecret";
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
 // Tipo para extender Request con información del usuario
 export interface AuthenticatedRequest extends Request {

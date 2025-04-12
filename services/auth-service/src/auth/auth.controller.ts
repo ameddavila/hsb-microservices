@@ -1,19 +1,21 @@
 import { Request, Response } from "express";
 import { z } from "zod";
-import { UserService } from "src/auth/auth.service";
+import { AuthService } from "./auth.service";
 import {
   generateAccessToken,
   generateRefreshToken,
   generateCsrfToken,
 } from "@utils/token";
+import jwt from "jsonwebtoken";
+import { VerifyTokenSchema } from "./auth.validator";
 
-// ✅ Validación de entrada con Zod
+// ✅ Login input validation
 const LoginSchema = z.object({
   identifier: z.string().min(3),
   password: z.string().min(8),
 });
 
-// ✅ Opciones estándar para cookies
+// ✅ Default cookie config
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -24,29 +26,26 @@ const cookieOptions = {
 const ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000; // 15 min
 const REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 días
 
-/**
- * 🔐 Login Handler
- * - Valida credenciales
- * - Genera Access/Refresh tokens
- * - Emite cookie con CSRF token
- */
+// ─────────────────────────────────────────────
+// 🔐 Login
+// ─────────────────────────────────────────────
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log("Usuario Login",req.body);
     const { identifier, password } = LoginSchema.parse(req.body);
-    const user = await UserService.loginUser(identifier, password);
+    const user = await AuthService.loginUser(identifier, password);
 
     const payload = {
       id: user.id,
       username: user.username,
       email: user.email,
-      dni: user.dni,
     };
 
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken();
     const csrfToken = generateCsrfToken(user.id);
 
-    await UserService.storeRefreshToken(
+    await AuthService.storeRefreshToken(
       user.id,
       refreshToken,
       new Date(Date.now() + REFRESH_TOKEN_EXPIRATION)
@@ -72,11 +71,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-/**
- * 🔄 Refresh Handler
- * - Verifica el refresh token y CSRF
- * - Retorna nuevo access token y CSRF token
- */
+// ─────────────────────────────────────────────
+// 🔄 Refresh token
+// ─────────────────────────────────────────────
 export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies["refreshToken"];
@@ -88,7 +85,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await UserService.verifyRefreshToken(refreshToken);
+    const user = await AuthService.verifyRefreshToken(refreshToken);
     if (!user) {
       res.status(403).json({ error: "Refresh token inválido o expirado" });
       return;
@@ -98,7 +95,6 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       id: user.id,
       username: user.username,
       email: user.email,
-      dni: user.dni,
     };
 
     const newAccessToken = generateAccessToken(payload);
@@ -120,16 +116,14 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-/**
- * 🔓 Logout Handler
- * - Invalida el refresh token
- * - Limpia todas las cookies relacionadas a la sesión
- */
+// ─────────────────────────────────────────────
+// 🔓 Logout
+// ─────────────────────────────────────────────
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies["refreshToken"];
     if (refreshToken) {
-      await UserService.invalidateRefreshToken(refreshToken);
+      await AuthService.invalidateRefreshToken(refreshToken);
     }
 
     res
@@ -139,5 +133,23 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       .json({ message: "Sesión cerrada" });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────
+// ✅ Verificación de token para microservicios
+// ─────────────────────────────────────────────
+export const verifyToken = (req: Request, res: Response): void => {
+  try {
+    const { token } = VerifyTokenSchema.parse(req.body);
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET!);
+    res.status(200).json({ valid: true, payload });
+  } catch (err: any) {
+    if (err.name === "ZodError") {
+      res.status(400).json({ valid: false, error: "Token inválido o ausente" });
+    } else {
+      res.status(401).json({ valid: false, error: err.message });
+    }
   }
 };
