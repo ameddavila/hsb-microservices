@@ -58,3 +58,15 @@ export const assignRole = async (req: Request, res: Response) => {
     return res.status(400).json({ error: error.message });
   }
 };
+
+export const getUserWithRolesAndPermissions = async (req: Request, res: Response) => {
+  try {
+    const { id } = UserIdParamSchema.parse(req.params);
+    const userData = await UserService.getUserRolesAndPermissions(id);
+
+    return res.json(userData);
+  } catch (error: any) {
+    console.error("❌ Error al obtener roles y permisos:", error);
+    return res.status(400).json({ error: error.message });
+  }
+};

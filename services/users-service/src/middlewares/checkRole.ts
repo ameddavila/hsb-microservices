@@ -2,8 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "./authenticateToken";
 
 /**
- * Middleware para verificar si el usuario tiene un rol permitido.
- * @param allowedRoles Lista de roles válidos (ej: ["admin", "moderador"])
+ * Middleware para verificar si el usuario tiene al menos uno de los roles permitidos.
  */
 export const checkRole = (allowedRoles: string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -14,17 +13,19 @@ export const checkRole = (allowedRoles: string[]) => {
       return res.status(401).json({ error: "No autenticado" });
     }
 
-    const role = req.user.role;
+    const userRoles = req.user.roles ?? [];
 
-    console.log(`🔍 [checkRole] Rol del usuario: ${role}`);
-    console.log(`✅ [checkRole] Roles permitidos: ${allowedRoles.join(", ")}`);
+    console.log("🔍 [checkRole] Roles del usuario:", userRoles);
+    console.log("✅ [checkRole] Roles permitidos:", allowedRoles);
 
-    if (!allowedRoles.includes(role)) {
-      console.warn(`🚫 [checkRole] Rol '${role}' no autorizado para esta acción`);
+    const hasPermission = userRoles.some((role) => allowedRoles.includes(role));
+
+    if (!hasPermission) {
+      console.warn(`🚫 [checkRole] Ninguno de los roles del usuario está autorizado`);
       return res.status(403).json({ error: "Acceso denegado por rol" });
     }
 
-    console.log("✅ [checkRole] Acceso permitido, continuando con la siguiente función...");
+    console.log("✅ [checkRole] Acceso permitido, continuando...");
     next();
   };
 };

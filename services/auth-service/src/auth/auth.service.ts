@@ -1,26 +1,22 @@
 // src/auth/auth.service.ts
-import axios from "axios";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { Op } from "sequelize";
 import UserModel from "@models/user.model";
 import RefreshTokenModel from "@models/refreshToken.model";
-import {
-  CreateUserSchema,
-} from "./auth.validator";
+import { CreateUserSchema } from "./auth.validator";
 import { UserClientService } from "@services/user-client.service";
 
 type CreateUserInput = z.infer<typeof CreateUserSchema>;
-
-const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3002";
 const SALT_ROUNDS = 10;
 
 export class AuthService {
-
   // ─────────────────────────────────────────────
   // 🔐 Login
   // ─────────────────────────────────────────────
   static async loginUser(identifier: string, password: string) {
+    console.log("🔐 [AuthService] Iniciando login...");
+
     const user = await UserModel.findOne({
       where: {
         [Op.or]: [
@@ -30,28 +26,34 @@ export class AuthService {
         ],
       },
     });
-  
-    if (!user) throw new Error("Credenciales inválidas");
-  
+
+    if (!user) {
+      console.warn("❌ Usuario no encontrado:", identifier);
+      throw new Error("Credenciales inválidas");
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error("Credenciales inválidas");
-  
-    // 📦 Obtener roles y permisos del user-service
+    if (!isMatch) {
+      console.warn("❌ Contraseña incorrecta para usuario:", user.username);
+      throw new Error("Credenciales inválidas");
+    }
+
+    // 📦 Obtener roles y permisos desde user-service
     const userInfo = await UserClientService.getUserWithRoles(user.id);
-    const roles = userInfo.roles.map((r) => r.name);
-    const permissions = userInfo.roles.flatMap((r) =>
-      r.permissions?.map((p) => `${p.action}:${p.module}`) || []
-    );
-  
+
+    console.log("✅ Login exitoso:", user.username);
+    console.log("🧑‍💼 Roles:", userInfo.roles);
+    console.log("🔐 Permisos:", userInfo.permissions);
+
     return {
-      ...user.toJSON(),
-      roles,
-      permissions,
+      ...user.toJSON(),                 // Contiene id, username, email, dni, etc.
+      roles: userInfo.roles,           // Array<string>
+      permissions: userInfo.permissions, // Array<string>
     };
   }
 
   // ─────────────────────────────────────────────
-  // ♻️ Refresh Token Management
+  // ♻️ Almacenar Refresh Token
   // ─────────────────────────────────────────────
   static async storeRefreshToken(
     userId: string,
@@ -69,6 +71,9 @@ export class AuthService {
     });
   }
 
+  // ─────────────────────────────────────────────
+  // ✅ Verificar Refresh Token
+  // ─────────────────────────────────────────────
   static async verifyRefreshToken(token: string) {
     const record = await RefreshTokenModel.findOne({
       where: { token, isActive: true },
@@ -77,13 +82,15 @@ export class AuthService {
 
     if (!record || record.expiresAt < new Date()) return null;
 
-    // Opcional: actualizar `lastUsedAt`
     record.lastUsedAt = new Date();
     await record.save();
 
     return record.user;
   }
 
+  // ─────────────────────────────────────────────
+  // 🔚 Invalidar Refresh Token
+  // ─────────────────────────────────────────────
   static async invalidateRefreshToken(token: string) {
     await RefreshTokenModel.update(
       { isActive: false },

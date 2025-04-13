@@ -1,13 +1,13 @@
 // src/auth/auth.controller.ts
 import { Request, Response } from "express";
 import { z } from "zod";
+import jwt from "jsonwebtoken";
 import { AuthService } from "./auth.service";
 import {
   generateAccessToken,
   generateRefreshToken,
   generateCsrfToken,
 } from "@utils/token";
-import jwt from "jsonwebtoken";
 import { VerifyTokenSchema } from "./auth.validator";
 
 // Validación de login
@@ -16,7 +16,7 @@ const LoginSchema = z.object({
   password: z.string().min(8),
 });
 
-// Configuración de cookies
+// Configuración de cookies seguras
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -24,25 +24,27 @@ const cookieOptions = {
   path: "/",
 };
 
-const ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000;
-const REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+const ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000; // 15 min
+const REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 días
+
+// Función para generar el payload estándar del usuario
+const buildUserPayload = (user: any) => ({
+  id: user.id,
+  username: user.username,
+  email: user.email,
+  dni: user.dni,
+  roles: user.roles ?? [],
+  permissions: user.permissions ?? [],
+});
 
 // 🔐 Login
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log("📥 Usuario Login:", req.body);
+    console.log("📥 [Login] Solicitud recibida:", req.body);
     const { identifier, password } = LoginSchema.parse(req.body);
 
     const user = await AuthService.loginUser(identifier, password);
-
-    const payload = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      dni: user.dni,
-      roles: user.roles ?? [],
-      permissions: user.permissions ?? [],
-    };
+    const payload = buildUserPayload(user);
 
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken();
@@ -70,7 +72,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       })
       .json({ user: payload });
   } catch (err: any) {
-    console.error("❌ Error en login:", err.message);
+    console.error("❌ [Login] Error:", err.message);
     res.status(400).json({ error: err.message });
   }
 };
@@ -83,6 +85,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     const csrfHeader = req.headers["x-csrf-token"];
 
     if (!refreshToken || !csrfCookie || csrfCookie !== csrfHeader) {
+      console.warn("⚠️ [Refresh] CSRF inválido o token ausente");
       res.status(403).json({ error: "Token refresh o CSRF inválidos" });
       return;
     }
@@ -93,11 +96,9 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const payload = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-    };
+    // 🧠 Si quieres incluir roles/permissions, debes obtenerlos nuevamente
+    const fullUser = await AuthService.loginUser(user.username, user.password); // Opcional si tienes hash
+    const payload = buildUserPayload(fullUser);
 
     const newAccessToken = generateAccessToken(payload);
     const newCsrfToken = generateCsrfToken(user.id);
@@ -113,12 +114,11 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         maxAge: ACCESS_TOKEN_EXPIRATION,
       })
       .json({ user: payload });
-
   } catch (err: any) {
+    console.error("❌ [Refresh] Error:", err.message);
     res.status(400).json({ error: err.message });
   }
 };
-
 
 // 🔓 Logout
 export const logout = async (req: Request, res: Response): Promise<void> => {
@@ -128,18 +128,18 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       await AuthService.invalidateRefreshToken(refreshToken);
     }
 
-     res
+    res
       .clearCookie("accessToken", cookieOptions)
       .clearCookie("refreshToken", cookieOptions)
       .clearCookie("csrfToken", cookieOptions)
       .json({ message: "Sesión cerrada" });
   } catch (err: any) {
-    console.error("❌ Error en logout:", err.message);
-     res.status(400).json({ error: err.message });
+    console.error("❌ [Logout] Error:", err.message);
+    res.status(400).json({ error: err.message });
   }
 };
 
-// ✅ Verificación de token
+// ✅ Verificación de token (público para otros servicios)
 export const verifyToken = (req: Request, res: Response): void => {
   try {
     const { token } = VerifyTokenSchema.parse(req.body);
@@ -149,6 +149,7 @@ export const verifyToken = (req: Request, res: Response): void => {
     const errorMsg =
       err.name === "ZodError" ? "Token inválido o ausente" : err.message;
     const status = err.name === "ZodError" ? 400 : 401;
+    console.error("❌ [VerifyToken] Error:", errorMsg);
     res.status(status).json({ valid: false, error: errorMsg });
   }
 };

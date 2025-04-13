@@ -9,9 +9,11 @@ export interface AuthenticatedRequest extends Request {
     username: string;
     email: string;
     dni: string;
-    role: string;
+    roles: string[];
+    permissions: string[];
   };
 }
+
 
 export const authenticateToken = (
   req: AuthenticatedRequest,
