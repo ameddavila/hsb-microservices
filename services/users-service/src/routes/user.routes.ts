@@ -13,7 +13,7 @@ const router = Router();
 // Protegidas solo para admin
 router.post("/", authenticateToken, checkRole(["admin"]), createUser);
 router.get("/", authenticateToken, checkRole(["admin"]), getAllUsers);
-router.get("/:id", authenticateToken, checkRole(["admin"]), getUserById);
+router.get("/:id", getUserById);
 router.post("/assign-role", authenticateToken, checkRole(["admin"]), assignRole);
 
 export default router;

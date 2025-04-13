@@ -21,20 +21,30 @@ import {
 
 @Table({ tableName: "Roles", timestamps: true })
 export default class RoleModel extends Model {
-  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
+  @Column({
+    type: DataType.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  })
   declare id: number;
 
-  @Column({ type: DataType.STRING(50), allowNull: false })
+  @Column({
+    type: DataType.STRING(50),
+    allowNull: false,
+  })
   declare name: string;
 
-  @Column({ type: DataType.STRING(255), allowNull: true })
+  @Column({
+    type: DataType.STRING(255),
+    allowNull: true,
+  })
   declare description?: string;
 
-  // 🔗 Relaciones many-to-many con permisos
+  // 🔗 Relación con Permisos (many-to-many)
   @BelongsToMany(() => PermissionModel, () => RolePermissionModel)
   declare permissions?: PermissionModel[];
 
-  // Métodos utilitarios para permisos
+  // Métodos Sequelize para relaciones
   declare addPermission: BelongsToManyAddAssociationMixin<PermissionModel, number>;
   declare addPermissions: BelongsToManyAddAssociationsMixin<PermissionModel, number>;
   declare getPermissions: BelongsToManyGetAssociationsMixin<PermissionModel>;

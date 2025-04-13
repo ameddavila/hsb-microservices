@@ -1,3 +1,4 @@
+// src/auth/auth.controller.ts
 import { Request, Response } from "express";
 import { z } from "zod";
 import { AuthService } from "./auth.service";
@@ -9,13 +10,13 @@ import {
 import jwt from "jsonwebtoken";
 import { VerifyTokenSchema } from "./auth.validator";
 
-// ✅ Login input validation
+// Validación de login
 const LoginSchema = z.object({
   identifier: z.string().min(3),
   password: z.string().min(8),
 });
 
-// ✅ Default cookie config
+// Configuración de cookies
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -23,22 +24,24 @@ const cookieOptions = {
   path: "/",
 };
 
-const ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000; // 15 min
-const REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 días
+const ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000;
+const REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
-// ─────────────────────────────────────────────
 // 🔐 Login
-// ─────────────────────────────────────────────
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log("Usuario Login",req.body);
+    console.log("📥 Usuario Login:", req.body);
     const { identifier, password } = LoginSchema.parse(req.body);
+
     const user = await AuthService.loginUser(identifier, password);
 
     const payload = {
       id: user.id,
       username: user.username,
       email: user.email,
+      dni: user.dni,
+      roles: user.roles ?? [],
+      permissions: user.permissions ?? [],
     };
 
     const accessToken = generateAccessToken(payload);
@@ -67,13 +70,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       })
       .json({ user: payload });
   } catch (err: any) {
+    console.error("❌ Error en login:", err.message);
     res.status(400).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
-// 🔄 Refresh token
-// ─────────────────────────────────────────────
+// ♻️ Refresh token
 export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies["refreshToken"];
@@ -111,14 +113,14 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
         maxAge: ACCESS_TOKEN_EXPIRATION,
       })
       .json({ user: payload });
+
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
+
 // 🔓 Logout
-// ─────────────────────────────────────────────
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies["refreshToken"];
@@ -126,30 +128,27 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       await AuthService.invalidateRefreshToken(refreshToken);
     }
 
-    res
+     res
       .clearCookie("accessToken", cookieOptions)
       .clearCookie("refreshToken", cookieOptions)
       .clearCookie("csrfToken", cookieOptions)
       .json({ message: "Sesión cerrada" });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    console.error("❌ Error en logout:", err.message);
+     res.status(400).json({ error: err.message });
   }
 };
 
-// ─────────────────────────────────────────────
-// ✅ Verificación de token para microservicios
-// ─────────────────────────────────────────────
+// ✅ Verificación de token
 export const verifyToken = (req: Request, res: Response): void => {
   try {
     const { token } = VerifyTokenSchema.parse(req.body);
-
     const payload = jwt.verify(token, process.env.JWT_SECRET!);
     res.status(200).json({ valid: true, payload });
   } catch (err: any) {
-    if (err.name === "ZodError") {
-      res.status(400).json({ valid: false, error: "Token inválido o ausente" });
-    } else {
-      res.status(401).json({ valid: false, error: err.message });
-    }
+    const errorMsg =
+      err.name === "ZodError" ? "Token inválido o ausente" : err.message;
+    const status = err.name === "ZodError" ? 400 : 401;
+    res.status(status).json({ valid: false, error: errorMsg });
   }
 };

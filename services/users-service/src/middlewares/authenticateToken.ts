@@ -18,6 +18,12 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ) => {
+  // 🧩 Permitir llamadas internas de microservicios
+  if (req.headers["x-internal-call"] === "true") {
+    console.log("🔁 Llamada interna detectada, sin verificación de token");
+    return next();
+  }
+
   const token = req.cookies["accessToken"];
   const csrfHeader = req.headers["x-csrf-token"];
   const csrfCookie = req.cookies["csrfToken"];
@@ -34,3 +40,4 @@ export const authenticateToken = (
     return res.status(403).json({ error: "Token inválido o expirado" });
   }
 };
+

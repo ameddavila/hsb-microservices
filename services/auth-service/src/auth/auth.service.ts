@@ -1,5 +1,5 @@
 // src/auth/auth.service.ts
-
+import axios from "axios";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { Op } from "sequelize";
@@ -8,36 +8,14 @@ import RefreshTokenModel from "@models/refreshToken.model";
 import {
   CreateUserSchema,
 } from "./auth.validator";
+import { UserClientService } from "@services/user-client.service";
 
 type CreateUserInput = z.infer<typeof CreateUserSchema>;
 
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://localhost:3002";
 const SALT_ROUNDS = 10;
 
 export class AuthService {
-  // ─────────────────────────────────────────────
-  // 🧑‍💻 Registro de nuevo usuario
-  // ─────────────────────────────────────────────
-  static async createUser(input: CreateUserInput) {
-    const data = CreateUserSchema.parse(input);
-
-    const exists = await UserModel.findOne({
-      where: {
-        [Op.or]: [
-          { email: data.email },
-          { username: data.username },
-          { dni: data.dni },
-        ],
-      },
-    });
-
-    if (exists) {
-      throw new Error("Ya existe un usuario con ese email, username o DNI");
-    }
-
-    const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
-    const user = await UserModel.create({ ...data, password: hashedPassword });
-    return user;
-  }
 
   // ─────────────────────────────────────────────
   // 🔐 Login
@@ -52,12 +30,24 @@ export class AuthService {
         ],
       },
     });
+  
     if (!user) throw new Error("Credenciales inválidas");
-
+  
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error("Credenciales inválidas");
-
-    return user;
+  
+    // 📦 Obtener roles y permisos del user-service
+    const userInfo = await UserClientService.getUserWithRoles(user.id);
+    const roles = userInfo.roles.map((r) => r.name);
+    const permissions = userInfo.roles.flatMap((r) =>
+      r.permissions?.map((p) => `${p.action}:${p.module}`) || []
+    );
+  
+    return {
+      ...user.toJSON(),
+      roles,
+      permissions,
+    };
   }
 
   // ─────────────────────────────────────────────
