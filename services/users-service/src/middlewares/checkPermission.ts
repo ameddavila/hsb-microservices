@@ -15,13 +15,13 @@ export const checkPermission = (requiredPermission: string) => {
 
       const userId = req.user.id;
 
-      // ⚠️ Si es administrador, pasa directo
-      if (req.user.role === "Administrador") {
+      // ✅ Verificar si el usuario tiene el rol "Administrador"
+      if (req.user.roles.includes("Administrador")) {
         return next();
       }
 
-      // Obtener permisos desde base de datos
-      const permissions = await UserService.getUserPermissions(userId);
+      // ✅ Obtener permisos desde base de datos
+      const { permissions } = await UserService.getUserRolesAndPermissions(userId);
 
       if (permissions.includes(requiredPermission)) {
         return next();
@@ -29,6 +29,7 @@ export const checkPermission = (requiredPermission: string) => {
 
       return res.status(403).json({ error: "No tienes permiso para acceder a esta ruta" });
     } catch (error) {
+      console.error("❌ Error en checkPermission:", error);
       return res.status(500).json({ error: "Error al verificar permisos" });
     }
   };

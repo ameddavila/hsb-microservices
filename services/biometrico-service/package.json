@@ -1,0 +1,41 @@
+{
+  "name": "biometrico-service",
+ "version": "1.0.0",
+    "description": "Microservicio para la gestión de Bimetricos HSB.",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "seed": "ts-node -r tsconfig-paths/register src/scripts/seedData.ts",
+        "reset-db": "ts-node -r tsconfig-paths/register src/scripts/reset-database.ts" 
+    },
+    "keywords": [],
+    "author": "HSB Dev",
+    "license": "MIT",
+    "type": "commonjs",
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "date-fns": "^4.1.0",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "mssql": "^11.0.1",
+        "sequelize": "^6.37.7",
+        "sequelize-typescript": "^2.1.6",
+        "zod": "^3.24.2"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^5.0.2",
+        "@types/cookie-parser": "^1.4.8",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/jsonwebtoken": "^9.0.9",
+        "@types/node": "^22.10.1",
+        "nodemon": "^3.1.9",
+        "ts-node": "^10.9.2",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.8.3"
+    }
+}
