@@ -1,17 +1,24 @@
 import { sequelize } from "@/config/sequelize";
 import app from "./app";
+import { defineRelations } from "@/relationships/biometrico.relations";
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3004;
 
 async function main() {
   try {
+    // 🌐 Conexión a base de datos
     await sequelize.authenticate();
     console.log("✅ Conectado correctamente a la base de datos.");
 
-    await sequelize.sync(); // Si deseas sincronizar modelos en desarrollo
+    // 🔗 Definir relaciones entre modelos
+    defineRelations();
 
+    // 🔄 Sincronizar modelos si estás en desarrollo (opcional)
+    await sequelize.sync();
+
+    // 🚀 Iniciar servidor
     app.listen(PORT, () => {
-      console.log(`🚀 Users-Service corriendo en http://localhost:${PORT}`);
+      console.log(`🚀 Biometrico-Service corriendo en http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error("❌ Error al iniciar el servidor:", error);

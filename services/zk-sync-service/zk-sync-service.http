@@ -1,0 +1,6 @@
+@zk_sync_service_HostAddress = http://localhost:5101
+
+GET {{zk_sync_service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

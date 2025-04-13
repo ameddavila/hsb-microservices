@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "xB69lE6ZUROUfzbXP52ahLdJgx0jj4Xp0/lGWNx0Z3E=",
+  "Source": "zk-sync-service",
+  "BasePath": "_content/zk-sync-service",
+  "Mode": "Default",
+  "ManifestType": "Publish",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

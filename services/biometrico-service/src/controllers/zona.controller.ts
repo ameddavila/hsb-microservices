@@ -1,24 +1,23 @@
-// ✅ src/modules/biometrico/controllers/zona.controller.ts
 import { Request, Response } from "express";
-import { zonaSchema } from "../validators/zona.validator";
+import { zonaSchema } from "@/validators/zona.validator";
 import {
   crearZona,
   obtenerZonas,
   obtenerZonaPorId,
   actualizarZona,
   eliminarZona,
-} from "../services/zona.service";
+} from "@/services/zona.service";
 
 // 🔹 Crear zona
 export const crearZonaController = async (req: Request, res: Response): Promise<void> => {
-  const { error, value } = zonaSchema.validate(req.body);
-  if (error) {
-    res.status(400).json({ error: error.details[0]?.message });
+  const result = zonaSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.errors.map((e) => e.message) });
     return;
   }
 
   try {
-    const nuevaZona = await crearZona(value, req);
+    const nuevaZona = await crearZona(result.data, req);
     res.status(201).json(nuevaZona);
   } catch (err: any) {
     console.error("❌ Error al crear zona:", err.message);
@@ -58,14 +57,15 @@ export const getZonaById = async (req: Request, res: Response): Promise<void> =>
 // 🔹 Actualizar zona
 export const updateZona = async (req: Request, res: Response): Promise<void> => {
   const zonaId = Number(req.params.id);
-  const { error, value } = zonaSchema.validate(req.body);
-  if (error) {
-    res.status(400).json({ error: error.details[0]?.message });
+
+  const result = zonaSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.errors.map((e) => e.message) });
     return;
   }
 
   try {
-    const zonaActualizada = await actualizarZona(zonaId, value, req);
+    const zonaActualizada = await actualizarZona(zonaId, result.data, req);
     if (!zonaActualizada) {
       res.status(404).json({ error: "Zona no encontrada" });
       return;

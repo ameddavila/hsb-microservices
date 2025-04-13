@@ -1,3 +1,6 @@
+// ✅ Cargar variables de entorno antes de cualquier otra cosa
+import dotenv from "dotenv";
+dotenv.config();
 import { sequelize } from "@/config/sequelize";
 import app from "./app";
 
