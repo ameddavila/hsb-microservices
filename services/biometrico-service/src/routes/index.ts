@@ -2,19 +2,14 @@ import { Router } from "express";
 import zonaRoutes from "./zona.routes";
 import dispositivoRoutes from "./dispositivo.routes";
 import dispositivoZktecoRoutes from "./dispositivo-zkteco.routes";
-
-// 🧩 Enrutador principal
+import credencialBiometricaRoutes from "./credencialBiometrica.routes"; 
+import dispositivoZKRoutes from "./dispositivo-zkteco.routes";
 const router = Router();
 
 // 📦 Registrar módulos de rutas
 router.use("/zonas", zonaRoutes);
-
 router.use("/dispositivos", dispositivoRoutes);
-
 router.use("/dispositivos-zkteco", dispositivoZktecoRoutes);
-
-// Aquí puedes agregar más rutas:
-// import empleadoRoutes from "./empleado.routes";
-// router.use("/empleados", empleadoRoutes);
-
+router.use("/credenciales", credencialBiometricaRoutes); // ✅ Aquí lo registras
+router.use("/dispositivos-zk", dispositivoZKRoutes); // Ruta base
 export default router;

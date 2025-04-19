@@ -47,3 +47,21 @@ export const getUsuariosConBiometria = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+import { sincronizarPlantillasDesdeZKAgent } from "@/services/credencialBiometrica.service";
+
+export const sincronizarPlantillasController = async (req: Request, res: Response) => {
+  try {
+    const { dispositivoId, tipo } = req.body;
+
+    if (!dispositivoId || !tipo) {
+      return res.status(400).json({ mensaje: "Faltan parámetros: dispositivoId o tipo" });
+    }
+
+    const resultado = await sincronizarPlantillasDesdeZKAgent(dispositivoId, tipo);
+    res.json(resultado);
+  } catch (error: any) {
+    res.status(500).json({ mensaje: error.message });
+  }
+};

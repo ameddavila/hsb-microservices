@@ -8,6 +8,8 @@ import {
 import { authenticateToken } from "@/middlewares/authenticateToken";
 import { checkPermission } from "@/middlewares/checkPermission";
 import { getUsuariosConBiometria } from "@/controllers/dispositivo-zkteco.controller";
+import { sincronizarPlantillasController } from "@/controllers/dispositivo-zkteco.controller";
+
 
 const router = Router();
 
