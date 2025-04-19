@@ -14,6 +14,7 @@ import DispositivoModel from "./dispositivo.model";
 import ZonaModel from "./zona.model";
 import AuditoriaModel from "./auditoria.model";
 import DiaFestivoModel from "./diaFestivo.model";
+import EmpleadoDispositivoModel from "./empleadoDispositivo.model";
 
 export const rrhhModels = [
   EmpleadoModel,
@@ -31,4 +32,5 @@ export const rrhhModels = [
   ZonaModel,
   AuditoriaModel,
   DiaFestivoModel,
+  EmpleadoDispositivoModel,
 ];

@@ -27,6 +27,9 @@ export default class EmpleadoModel extends Model {
   apellidoMaterno?: string;
 
   @Column(DataType.STRING)
+  NombreBio?: string;
+
+  @Column(DataType.STRING)
   telefonoCelular?: string;
 
   @Column(DataType.STRING)
@@ -45,15 +48,15 @@ export default class EmpleadoModel extends Model {
   fechaIngreso!: Date;
 
   @ForeignKey(() => DepartamentoModel)
-  @Column({ field: 'departamentoId', type: DataType.INTEGER })
+  @Column({ type: DataType.INTEGER })
   departamentoId!: number;
-
+  
   @ForeignKey(() => FuenteFinanciamientoModel)
-  @Column({ field: 'fuenteFinanciamientoId', type: DataType.INTEGER })
+  @Column({ type: DataType.INTEGER })
   fuenteFinanciamientoId!: number;
-
+  
   @ForeignKey(() => CargoModel)
-  @Column({ field: 'cargoId', type: DataType.INTEGER })
+  @Column({ type: DataType.INTEGER })
   cargoId!: number;
 
   @Column(DataType.STRING)

@@ -1,11 +1,3 @@
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.csproj.AssemblyReference.cache
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.GeneratedMSBuildEditorConfig.editorconfig
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.AssemblyInfoInputs.cache
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.AssemblyInfo.cs
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.csproj.CoreCompileInputs.cache
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.MvcApplicationPartsAssemblyInfo.cs
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.MvcApplicationPartsAssemblyInfo.cache
-H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.sourcelink.json
 H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\appsettings.Development.json
 H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\appsettings.json
 H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\zk-bioagent.staticwebassets.endpoints.json
@@ -23,6 +15,14 @@ H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\Swashbuckle.
 H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 H:\hsb-microservicios\backend\services\zk-bioagent\bin\Debug\net9.0\Interop.zkemkeeper.dll
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.csproj.AssemblyReference.cache
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.GeneratedMSBuildEditorConfig.editorconfig
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.AssemblyInfoInputs.cache
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.AssemblyInfo.cs
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.csproj.CoreCompileInputs.cache
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.MvcApplicationPartsAssemblyInfo.cs
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.MvcApplicationPartsAssemblyInfo.cache
+H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\zk-bioagent.sourcelink.json
 H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\scopedcss\bundle\zk-bioagent.styles.css
 H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\staticwebassets.build.json
 H:\hsb-microservicios\backend\services\zk-bioagent\obj\Debug\net9.0\staticwebassets.development.json

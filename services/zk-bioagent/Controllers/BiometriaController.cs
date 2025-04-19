@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using zk_bioagent.Services;
 using zk_bioagent.Services.ZKEM;
-
+//using zk_bioagent.Services.ZKHID;
 
 namespace zk_bioagent.Controllers
 {
@@ -9,8 +9,15 @@ namespace zk_bioagent.Controllers
     [Route("api/biometria")]
     public class BiometriaController : ControllerBase
     {
+        private readonly ZKService _zkService;
+
+        public BiometriaController(ZKService zkService)
+        {
+            _zkService = zkService;
+        }
+        
         /// <summary>
-        /// Escanea la red local para encontrar dispositivos ZKTeco activos en el puerto 4370.
+        /// Escanea la red local y devuelve IPs activas con puerto 4370 (ZKTeco).
         /// </summary>
         [HttpGet("scan")]
         public async Task<IActionResult> EscanearRed(
@@ -24,7 +31,7 @@ namespace zk_bioagent.Controllers
         }
 
         /// <summary>
-        /// Obtiene los detalles de un dispositivo (modelo, SN, IP, firmware).
+        /// Consulta los datos básicos del dispositivo (modelo, firmware, IP, SN).
         /// </summary>
         [HttpGet("detalle")]
         public IActionResult ObtenerDetalleDispositivo([FromQuery] string? ip = null)
@@ -39,37 +46,7 @@ namespace zk_bioagent.Controllers
         }
 
         /// <summary>
-        /// Obtiene las estadísticas del dispositivo (usuarios, huellas, rostros, marcaciones).
-        /// </summary>
-        [HttpGet("estadisticas")]
-        public IActionResult ObtenerEstadisticas()
-        {
-            var servicio = new DeviceStatsService();
-            var stats = servicio.ObtenerEstadisticas();
-
-            if (stats == null)
-                return BadRequest(new { success = false, mensaje = "No se pudo obtener estadísticas del dispositivo." });
-
-            return Ok(new { success = true, estadisticas = stats });
-        }
-
-        /// <summary>
-        /// Obtiene detalle + estadísticas del dispositivo en una sola respuesta.
-        /// </summary>
-        [HttpGet("full")]
-        public IActionResult ObtenerTodoDelDispositivo()
-        {
-            var servicio = new DeviceFullInfoService();
-            var full = servicio.ObtenerTodo();
-
-            if (full == null)
-                return BadRequest(new { success = false, mensaje = "No se pudo obtener la información completa del dispositivo." });
-
-            return Ok(new { success = true, dispositivo = full });
-        }
-
-        /// <summary>
-        /// Captura una huella (dummy temporal, será reemplazado).
+        /// Captura una huella biométrica (simulado, vía ZKHIDLib).
         /// </summary>
         [HttpPost("huella")]
         public IActionResult CapturarHuella()
@@ -82,8 +59,10 @@ namespace zk_bioagent.Controllers
 
             return Ok(new { success = true, template = resultado });
         }
-        
-        /*para despues trabajar con la bd*/
+
+        /// <summary>
+        /// Obtiene información detallada (datos + estadísticas) de múltiples dispositivos por IP.
+        /// </summary>
         [HttpPost("batch")]
         public async Task<IActionResult> ObtenerInfoPorLote([FromBody] DeviceBatchService.EntradaDispositivo input)
         {
@@ -96,24 +75,29 @@ namespace zk_bioagent.Controllers
                 resultados
             });
         }
-        
+
+        /// <summary>
+        /// Consulta detalle completo de un único dispositivo por su IP.
+        /// </summary>
         [HttpGet("batch/ip")]
-public async Task<IActionResult> ObtenerInfoPorIP([FromQuery] string ip)
-{
-    var servicio = new DeviceBatchService();
-    var resultado = await servicio.ObtenerInfoDeIPs(new List<string> { ip });
+        public async Task<IActionResult> ObtenerInfoPorIP([FromQuery] string ip)
+        {
+            var servicio = new DeviceBatchService();
+            var resultado = await servicio.ObtenerInfoDeIPs(new List<string> { ip });
 
-    if (resultado == null || resultado.Count == 0)
-        return BadRequest(new { success = false, mensaje = $"No se pudo obtener información para {ip}" });
+            if (resultado == null || resultado.Count == 0)
+                return BadRequest(new { success = false, mensaje = $"No se pudo obtener información para {ip}" });
 
-    return Ok(new
-    {
-        success = true,
-        resultado = resultado[0]
-    });
-}
+            return Ok(new
+            {
+                success = true,
+                resultado = resultado[0]
+            });
+        }
 
-
+        /// <summary>
+        /// Consulta la cantidad total de registros biométricos (asistencias) en un dispositivo.
+        /// </summary>
         [HttpGet("zkem/logs-count")]
         public IActionResult ObtenerCantidad([FromQuery] string ip)
         {
@@ -128,6 +112,9 @@ public async Task<IActionResult> ObtenerInfoPorIP([FromQuery] string ip)
             return Ok(new { success = true, ip, cantidad });
         }
 
+        /// <summary>
+        /// Descarga todos los registros biométricos del dispositivo (asistencias).
+        /// </summary>
         [HttpGet("zkem/logs")]
         public IActionResult DescargarLogs([FromQuery] string ip)
         {
@@ -142,7 +129,58 @@ public async Task<IActionResult> ObtenerInfoPorIP([FromQuery] string ip)
             return Ok(new { success = true, ip, registros });
         }
 
+        /// <summary>
+        /// Escanea IPs activas y devuelve información completa de cada dispositivo ZKTeco.
+        /// </summary>
+        [HttpGet("scan/full")]
+        public async Task<IActionResult> EscanearRedYObtenerDetalles(
+            [FromQuery] string inicio = "192.168.0.1",
+            [FromQuery] string fin = "192.168.7.254",
+            [FromQuery] int puerto = 4370)
+        {
+            var servicio = new DeviceScanFullService();
+            var resultados = await servicio.EscanearYObtener(inicio, fin, puerto);
 
+            return Ok(new { success = true, dispositivos = resultados });
+        }
+        /// <summary>
+        /// Obtiene la lista de usuarios registrados en un dispositivo ZKTeco especificado por IP.
+        /// Usa el SDK zkemkeeper.dll para conectarse al dispositivo y recuperar datos como ID, nombre,
+        /// privilegio y estado (habilitado o no).
+        /// </summary>
+        /// <param name="ip">Dirección IP del dispositivo ZKTeco</param>
+        /// <returns>Lista de usuarios en formato JSON</returns>
+        [HttpGet("usuarios")]
+        public async Task<IActionResult> ObtenerUsuarios([FromQuery] string ip)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(ip))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "IP no proporcionada"
+                    });
+                }
+
+                var usuarios = await _zkService.ObtenerUsuarios(ip);
+
+                return Ok(new
+                {
+                    success = true,
+                    usuarios
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Error al obtener usuarios: {ex.Message}"
+                });
+            }
+        }
 
 
     }

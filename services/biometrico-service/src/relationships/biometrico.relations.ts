@@ -13,6 +13,7 @@ import DetalleHorarioModel from "@/models/detalleHorario.model";
 import MarcacionModel from "@/models/marcacion.model";
 import DispositivoModel from "@/models/dispositivo.model";
 import ZonaModel from "@/models/zona.model";
+import EmpleadoDispositivoModel from '@/models/empleadoDispositivo.model';
 
 /**
  * 🔗 Define todas las relaciones entre modelos del biometrico-service
@@ -58,4 +59,11 @@ export const defineRelations = () => {
   // 🔹 Zona y dispositivos
   DispositivoModel.belongsTo(ZonaModel, { foreignKey: "zonaId" });
   ZonaModel.hasMany(DispositivoModel, { foreignKey: "zonaId" });
+
+  // 🔹 Relación M:N lógica entre Empleado y Dispositivo
+EmpleadoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'empleadoId' });
+EmpleadoDispositivoModel.belongsTo(EmpleadoModel, { foreignKey: 'empleadoId' });
+
+DispositivoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'dispositivoId' });
+EmpleadoDispositivoModel.belongsTo(DispositivoModel, { foreignKey: 'dispositivoId' });
 };

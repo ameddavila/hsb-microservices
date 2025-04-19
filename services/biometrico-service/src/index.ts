@@ -15,6 +15,7 @@ async function main() {
 
     // 🔄 Sincronizar modelos si estás en desarrollo (opcional)
     await sequelize.sync();
+    //await sequelize.sync({force:true});
 
     // 🚀 Iniciar servidor
     app.listen(PORT, () => {

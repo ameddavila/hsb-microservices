@@ -5,11 +5,13 @@ import {
   obtenerDispositivoPorId,
   actualizarDispositivo,
   eliminarDispositivo,
+  registrarDispositivo,
 } from "@/services/dispositivo.service";
 
+import { obtenerDispositivosDesdeZKAgent } from "@/services/zkBioagentClient.service";
 import { dispositivoSchema } from "@/validators/dispositivo.validator";
 
-// 🔹 Crear dispositivo
+// 🔹 Crear nuevo dispositivo con validación Zod
 export const crearDispositivoController = async (req: Request, res: Response) => {
   const result = dispositivoSchema.safeParse(req.body);
   if (!result.success) {
@@ -27,35 +29,48 @@ export const crearDispositivoController = async (req: Request, res: Response) =>
   }
 };
 
-// 🔹 Obtener todos los dispositivos
+// 🔹 Obtener todos los dispositivos registrados
 export const obtenerDispositivosController = async (req: Request, res: Response) => {
   try {
+    console.log("📥 Solicitud para obtener dispositivos registrados");
     const lista = await obtenerDispositivos(req);
-    res.json(lista);
-  } catch (err) {
-    console.error("❌ Error al obtener dispositivos:", err);
-    res.status(500).json({ error: "Error al obtener dispositivos" });
+    console.log(`✅ Se obtuvieron ${lista.length} dispositivos`);
+    res.json({ success: true, dispositivos: lista });
+  } catch (err: any) {
+    console.error("❌ Error al obtener dispositivos:", err.message || err);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al obtener dispositivos"
+    });
   }
 };
 
-// 🔹 Obtener dispositivo por ID
+// 🔹 Obtener un dispositivo específico por ID
 export const obtenerDispositivoPorIdController = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "ID de dispositivo inválido" });
+  }
+
   try {
-    const disp = await obtenerDispositivoPorId(id, req);
-    if (!disp) {
+    const dispositivo = await obtenerDispositivoPorId(id, req);
+    if (!dispositivo) {
       return res.status(404).json({ error: "Dispositivo no encontrado" });
     }
-    res.json(disp);
+    res.json(dispositivo);
   } catch (err) {
     console.error("❌ Error al obtener dispositivo:", err);
     res.status(500).json({ error: "Error al obtener dispositivo" });
   }
 };
 
-// 🔹 Actualizar dispositivo
+// 🔹 Actualizar un dispositivo existente
 export const actualizarDispositivoController = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "ID inválido" });
+  }
 
   const result = dispositivoSchema.safeParse(req.body);
   if (!result.success) {
@@ -76,9 +91,14 @@ export const actualizarDispositivoController = async (req: Request, res: Respons
   }
 };
 
-// 🔹 Eliminar dispositivo
+// 🔹 Eliminar un dispositivo por ID
 export const eliminarDispositivoController = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "ID inválido" });
+  }
+
   try {
     const eliminado = await eliminarDispositivo(id, req);
     if (!eliminado) {
@@ -88,5 +108,51 @@ export const eliminarDispositivoController = async (req: Request, res: Response)
   } catch (err) {
     console.error("❌ Error al eliminar dispositivo:", err);
     res.status(500).json({ error: "Error al eliminar dispositivo" });
+  }
+};
+
+// 🔹 Registrar un dispositivo detectado desde el agente zk-bioagent
+export const registrarDispositivoController = async (req: Request, res: Response) => {
+  try {
+    const resultado = await registrarDispositivo(req.body);
+    res.status(201).json({
+      success: true,
+      creado: resultado.creado,
+      dispositivo: resultado.dispositivo
+    });
+  } catch (error: any) {
+    console.error("❌ Error al registrar dispositivo:", error.message);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al registrar el dispositivo",
+      error: error.message
+    });
+  }
+};
+
+// 🔹 Obtener dispositivos activos desde zk-bioagent (por IP)
+export const buscarDispositivosEnRed = async (req: Request, res: Response) => {
+  const { inicio, fin } = req.query;
+
+  console.log("🔍 Buscando dispositivos en red entre:", inicio, "y", fin);
+
+  if (!inicio || !fin) {
+    return res.status(400).json({
+      success: false,
+      mensaje: "Debes proporcionar los parámetros 'inicio' e 'fin' (rango IP)"
+    });
+  }
+
+  try {
+    const dispositivos = await obtenerDispositivosDesdeZKAgent(String(inicio), String(fin));
+    console.log(`✅ Se detectaron ${dispositivos.length} dispositivos activos.`);
+    res.json({ success: true, dispositivos });
+  } catch (error: any) {
+    console.error("❌ Error al buscar dispositivos en red:", error);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al obtener dispositivos desde zk-bioagent",
+      error: error.message
+    });
   }
 };

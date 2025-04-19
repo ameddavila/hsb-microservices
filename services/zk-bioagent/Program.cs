@@ -2,9 +2,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using zk_bioagent.Services; //
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Definir puerto por defecto
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(3010); // 👈 aquí defines el puerto
+});
 // Registrar controladores y Swagger/OpenAPI
 builder.Services.AddControllers(); // 🔥 Necesario para usar Controllers
 builder.Services.AddEndpointsApiExplorer();
@@ -16,6 +22,8 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1"
     });
 });
+
+builder.Services.AddScoped<ZKService>();
 
 var app = builder.Build();
 
