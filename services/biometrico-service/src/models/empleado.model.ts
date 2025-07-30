@@ -65,6 +65,9 @@ export default class EmpleadoModel extends Model {
   @Column({ type: DataType.BOOLEAN, defaultValue: true })
   activo!: boolean;
 
+  @Column({ type: DataType.BOOLEAN, defaultValue: true })
+  isNew!: boolean;
+
   @Column({ type: DataType.DATE, defaultValue: DataType.NOW })
   fechaCreacion!: Date;
 }

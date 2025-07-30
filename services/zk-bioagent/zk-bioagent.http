@@ -1,6 +1,0 @@
-@zk_bioagent_HostAddress = http://localhost:3010
-
-GET {{zk_bioagent_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,7 +1,9 @@
 // src/services/user.service.ts
-import UserModel from "@/models/user.model";
+//import UserModel from "@/models/user.model";
 import RoleModel from "@/models/role.model";
 import PermissionModel from "@/models/permission.model";
+import UserModel, { UserAttributes } from "@/models/user.model";
+
 
 export const UserService = {
   async createUser(data: any) {
@@ -30,35 +32,48 @@ export const UserService = {
     return { message: "Rol asignado correctamente" };
   },
 
-  async getUserRolesAndPermissions(userId: string) {
-    const user = await UserModel.findByPk(userId, {
-      include: [
-        {
-          model: RoleModel,
-          include: [PermissionModel]
-        }
-      ]
-    });
-    console.log("👤 Usuario:", user?.username);
-console.log("🔐 Roles:", user?.roles?.map(r => r.name));
-console.log("🔑 Permisos:", user?.roles?.flatMap(r => r.permissions?.map(p => `${p.action}:${p.module}`)));
+  async updateUser(userId: string, data: Partial<UserAttributes>) {
+  const user = await UserModel.findByPk(userId);
+  if (!user) return null;
 
-  
-    if (!user) throw new Error("Usuario no encontrado");
-  
-    const roles = user.roles?.map((role) => role.name) || [];
-  
-    const permissions = user.roles?.flatMap((role) =>
-      role.permissions?.map((perm) => `${perm.action}:${perm.module}`) || []
-    ) || [];
-  
-    return {
-      id: user.id,
-      dni: user.dni,
-      username: user.username,
-      email: user.email,
-      roles,
-      permissions
-    };
-  }
+  return await user.update(data);
+},
+
+ async getUserRolesAndPermissions(userId: string) {
+  const user = await UserModel.findByPk(userId, {
+    include: [
+      {
+        model: RoleModel,
+        through: { attributes: [] },
+        include: [
+          {
+            model: PermissionModel,
+            through: { attributes: [] },
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!user) throw new Error("Usuario no encontrado");
+
+  const roles = user.roles?.map((role) => role.name) || [];
+
+  const permissions = user.roles?.flatMap((role) =>
+    role.permissions?.map((perm) => `${perm.action}:${perm.module}`) || []
+  ) || [];
+
+  return {
+    id: user.id,
+    dni: user.dni,
+    username: user.username,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phone: user.phone,
+    profileImage: user.profileImage,
+    roles,
+    permissions,
+  };
+}
 };

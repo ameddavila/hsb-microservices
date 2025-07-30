@@ -3,25 +3,49 @@ import {
   testConexionDispositivo,
   getUsuariosDispositivo,
   getMarcacionesDispositivo,
+  getUsuariosConBiometria
 } from "@/controllers/dispositivo-zkteco.controller";
 
 import { authenticateToken } from "@/middlewares/authenticateToken";
 import { checkPermission } from "@/middlewares/checkPermission";
-import { getUsuariosConBiometria } from "@/controllers/dispositivo-zkteco.controller";
-import { sincronizarPlantillasController } from "@/controllers/dispositivo-zkteco.controller";
-
 
 const router = Router();
 
-router.get("/:id/test-connection", authenticateToken, checkPermission(["Administrador"]), testConexionDispositivo);
-router.get("/:id/users", authenticateToken, checkPermission(["Administrador"]), getUsuariosDispositivo);
-router.get("/:id/logs", authenticateToken, checkPermission(["Administrador"]), getMarcacionesDispositivo);
+/**
+ * 📡 Rutas para gestión directa de dispositivos ZKTeco.
+ * Todas protegidas con autenticación y permisos de Administrador.
+ */
 
+// 🔌 Probar conexión con dispositivo
 router.get(
-    "/:id/users-bio",
-    authenticateToken,
-    checkPermission(["Administrador"]),
-    getUsuariosConBiometria
-  );
+  "/:id/test-connection",
+  authenticateToken,
+  checkPermission(["Administrador"]),
+  testConexionDispositivo
+);
+
+// 👥 Obtener usuarios del dispositivo
+router.get(
+  "/:id/users",
+  authenticateToken,
+  checkPermission(["Administrador"]),
+  getUsuariosDispositivo
+);
+
+// 🕒 Obtener logs/marcaciones del dispositivo
+router.get(
+  "/:id/logs",
+  authenticateToken,
+  checkPermission(["Administrador"]),
+  getMarcacionesDispositivo
+);
+
+// 📸✋ Obtener usuarios con biometría (rostro o huella)
+router.get(
+  "/:id/users-bio",
+  authenticateToken,
+  checkPermission(["Administrador"]),
+  getUsuariosConBiometria
+);
 
 export default router;

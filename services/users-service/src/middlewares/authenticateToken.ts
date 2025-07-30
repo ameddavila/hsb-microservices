@@ -29,6 +29,9 @@ export const authenticateToken = (
   const token = req.cookies["accessToken"];
   const csrfHeader = req.headers["x-csrf-token"];
   const csrfCookie = req.cookies["csrfToken"];
+  console.log("🍪 Cookie accessToken:", req.cookies["accessToken"]);
+  console.log("🛡️ Header x-csrf-token:", csrfHeader);
+  console.log("🍪 Cookie csrfToken:", csrfCookie);
 
   if (!token || !csrfHeader || csrfHeader !== csrfCookie) {
     return res.status(403).json({ error: "No autorizado o CSRF inválido" });

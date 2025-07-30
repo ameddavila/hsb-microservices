@@ -1,7 +1,6 @@
 import { Sequelize } from "sequelize-typescript";
-import path from "path";
 import dotenv from "dotenv";
-import { menuModels } from "../models"; // Ajusta según aliasdels" si no usas alias
+import { menuModels } from "../models"; // ← Importa desde index.ts
 
 dotenv.config();
 
@@ -15,7 +14,7 @@ export const sequelize = new Sequelize({
   dialectOptions: {
     options: {
       encrypt: false,
-      instanceName: process.env.DB_INSTANCE,
+      instanceName: process.env.DB_INSTANCE || undefined,
     },
   },
   models: menuModels,

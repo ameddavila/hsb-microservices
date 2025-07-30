@@ -2,7 +2,18 @@
 node_modules/
 dist/
 .env
-
+zk-bioagent/
 # Logs
 *.log
 logs/
+
+# DLLs y scripts por lotes
+*.dll
+*.bat
+
+# Recomendado para proyectos .NET
+**/bin/
+**/obj/
+
+# Ignorar carpetas de SDK
+**/SDK/

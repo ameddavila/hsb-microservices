@@ -7,8 +7,7 @@
     "dev": "nodemon --watch src --exec ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "seed": "ts-node -r tsconfig-paths/register src/scripts/seedData.ts",
-    "reset-db": "ts-node -r tsconfig-paths/register src/scripts/reset-database.ts"
+    "seed": "ts-node -r tsconfig-paths/register src/scripts/seedData.ts"
   },
   "keywords": [],
   "author": "HSB Dev",

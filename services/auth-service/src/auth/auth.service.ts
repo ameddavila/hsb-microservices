@@ -41,15 +41,26 @@ export class AuthService {
     // 📦 Obtener roles y permisos desde user-service
     const userInfo = await UserClientService.getUserWithRoles(user.id);
 
-    console.log("✅ Login exitoso:", user.username);
-    console.log("🧑‍💼 Roles:", userInfo.roles);
-    console.log("🔐 Permisos:", userInfo.permissions);
+    //console.log(userInfo);
+    console.log("✅ [auth.service]Login exitoso:", user.username);
+    //console.log("✅ [auth.service]user:", user.toJSON());
+    console.log("✅ [auth.service]userInfo:", userInfo);
+    //console.log("🧑‍💼 [auth.service]Roles:", userInfo.roles);
+    //console.log("🔐 [auth.service]Permisos:", userInfo.permissions);
 
     return {
-      ...user.toJSON(),                 // Contiene id, username, email, dni, etc.
-      roles: userInfo.roles,           // Array<string>
-      permissions: userInfo.permissions, // Array<string>
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      dni: userInfo.dni,
+      firstName: userInfo.firstName,
+      lastName: userInfo.lastName,
+      phone: userInfo.phone,
+      profileImage: userInfo.profileImage,
+      roles: userInfo.roles,
+      permissions: userInfo.permissions,
     };
+
   }
 
   // ─────────────────────────────────────────────

@@ -49,3 +49,5 @@ export interface DispositivoInput {
     success: boolean;
     usuarios: ZKUsuario[];
   }
+
+  export type TipoCredencial = "rostro" | "huella" | "password";

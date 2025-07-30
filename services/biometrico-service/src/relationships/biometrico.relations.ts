@@ -30,8 +30,11 @@ export const defineRelations = () => {
   CargoModel.hasMany(EmpleadoModel, { foreignKey: "cargoId" });
 
   // 🔹 Empleado -> Relaciones directas
-  EmpleadoModel.hasMany(CredencialBiometricaModel, { foreignKey: "empleadoId" });
-  CredencialBiometricaModel.belongsTo(EmpleadoModel, { foreignKey: "empleadoId" });
+  //EmpleadoModel.hasMany(CredencialBiometricaModel, { foreignKey: "empleadoId" });
+  //CredencialBiometricaModel.belongsTo(EmpleadoModel, { foreignKey: "empleadoId" });
+  EmpleadoModel.hasMany(CredencialBiometricaModel, { foreignKey: "empleadoId", as: "credenciales" });
+  CredencialBiometricaModel.belongsTo(EmpleadoModel, { foreignKey: "empleadoId", as: "empleadoCredencial" });
+
 
   EmpleadoModel.hasMany(PermisoModel, { foreignKey: "empleadoId" });
   PermisoModel.belongsTo(EmpleadoModel, { foreignKey: "empleadoId" });
@@ -53,17 +56,26 @@ export const defineRelations = () => {
   TipoHorarioModel.hasMany(DetalleHorarioModel, { foreignKey: "tipoHorarioId" });
 
   // 🔹 Marcaciones y dispositivos
-  MarcacionModel.belongsTo(DispositivoModel, { foreignKey: "dispositivoId" });
-  DispositivoModel.hasMany(MarcacionModel, { foreignKey: "dispositivoId" });
+  MarcacionModel.belongsTo(DispositivoModel, { foreignKey: "dispositivoId", as: 'dispositivoMarcacion' });
+  DispositivoModel.hasMany(MarcacionModel, { foreignKey: "dispositivoId", as: 'marcaciones' });
 
   // 🔹 Zona y dispositivos
   DispositivoModel.belongsTo(ZonaModel, { foreignKey: "zonaId" });
   ZonaModel.hasMany(DispositivoModel, { foreignKey: "zonaId" });
 
   // 🔹 Relación M:N lógica entre Empleado y Dispositivo
-EmpleadoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'empleadoId' });
-EmpleadoDispositivoModel.belongsTo(EmpleadoModel, { foreignKey: 'empleadoId' });
+//EmpleadoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'empleadoId' });
+//EmpleadoDispositivoModel.belongsTo(EmpleadoModel, { foreignKey: 'empleadoId' });
 
-DispositivoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'dispositivoId' });
-EmpleadoDispositivoModel.belongsTo(DispositivoModel, { foreignKey: 'dispositivoId' });
+//DispositivoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'dispositivoId' });
+//EmpleadoDispositivoModel.belongsTo(DispositivoModel, { foreignKey: 'dispositivoId' });
+
+EmpleadoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'empleadoId', as: 'dispositivosAsignados' });
+EmpleadoDispositivoModel.belongsTo(EmpleadoModel, { foreignKey: 'empleadoId', as: 'empleadoAsignado' });
+
+// Relación de EmpleadoDispositivo con Dispositivo
+EmpleadoDispositivoModel.belongsTo(DispositivoModel, { foreignKey: 'dispositivoId', as: 'dispositivoAsignado' });
+DispositivoModel.hasMany(EmpleadoDispositivoModel, { foreignKey: 'dispositivoId', as: 'empleadosAsignados' });
+
+
 };

@@ -11,6 +11,10 @@ export interface UserResponse {
   username: string;
   email: string;
   dni: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  profileImage?: string;
   roles: string[];           // 🔄 nombres de roles
   permissions: string[];     // 🔄 permisos como "read:usuarios"
 }
@@ -31,7 +35,7 @@ export const UserClientService = {
       console.log("📦 ID:", data.id);
       console.log("👤 Usuario:", data.username);
       console.log("🧑‍💼 Roles:", data.roles);
-      console.log("🔐 Permisos:", data.permissions);
+      //console.log("🔐 [user-cliente.service]Permisos:", data.permissions);
 
       // Validación rápida del shape de los datos
       if (!data || !data.roles || !data.permissions) {

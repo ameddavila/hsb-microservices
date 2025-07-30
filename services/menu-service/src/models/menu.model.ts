@@ -1,4 +1,4 @@
-// ✅ FILE: src/models/menu.model.ts
+// src/models/menu.model.ts
 import {
   Table,
   Column,
@@ -10,7 +10,6 @@ import {
   UpdatedAt,
   BelongsToMany,
 } from "sequelize-typescript";
-
 import RoleModel from "./role.model";
 import RoleMenuModel from "./roleMenu.model";
 
@@ -33,13 +32,16 @@ export default class MenuModel extends Model {
   @Column({ type: DataType.INTEGER, allowNull: true })
   declare parentId?: number;
 
-  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
+  @Column({ type: DataType.BOOLEAN, allowNull: false })
   declare isActive: boolean;
 
-  @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 0 })
+  @Column({ type: DataType.INTEGER, allowNull: false })
   declare sortOrder: number;
 
-  // ✅ Relación many-to-many con Roles
+  // ✅ Nuevo campo agregado
+  @Column({ type: DataType.STRING(100), allowNull: true })
+  declare permission?: string;
+
   @BelongsToMany(() => RoleModel, () => RoleMenuModel)
   declare roles?: RoleModel[];
 

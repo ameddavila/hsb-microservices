@@ -1,24 +1,58 @@
+// src/auth/auth.routes.ts
 import { Router } from "express";
 import {
   login,
   refresh,
   logout,
   verifyToken,
+  getSessionInfo,
+  getCsrfToken,
 } from "./auth.controller";
-import { verifyCsrfToken } from "@middlewares/csrf.middleware"; // Usa alias si está configurado
+
+import csrf from "csurf";
+import { logCsrfDetails } from "@middlewares/csrf.middleware";
+import { authenticateToken } from "@middlewares/auth.middleware";
 
 const router = Router();
 
-// 🔐 Login: genera access + refresh + csrf tokens
+/* -------------------------------------------------------------------------- */
+/* 🧩 Middleware de generación de token CSRF                                  */
+/* -------------------------------------------------------------------------- */
+const generateCsrf = csrf({
+  cookie: {
+    key: "_csrf",
+    httpOnly: false, // accesible por el frontend
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  },
+});
+
+/* -------------------------------------------------------------------------- */
+/* 🔓 RUTAS PÚBLICAS                                                          */
+/* -------------------------------------------------------------------------- */
+
+// 🔐 Iniciar sesión (no requiere CSRF porque aún no hay cookies)
 router.post("/login", login);
 
-// 🔄 Refresh: requiere refresh token válido + CSRF
-router.post("/refresh", verifyCsrfToken, refresh);
+// 🎯 Obtener token CSRF inicial para el frontend
+router.get("/csrf", generateCsrf, getCsrfToken);
 
-// 🚪 Logout: invalida refresh token y elimina cookies
-router.post("/logout", logout);
+/* -------------------------------------------------------------------------- */
+/* 🔒 RUTAS PROTEGIDAS (requieren CSRF + JWT si aplica)                      */
+/* -------------------------------------------------------------------------- */
 
-// ✅ Verificación externa del access token (uso por otros microservicios)
+// ♻️ Refrescar token de sesión (CSRF + cookie + JWT si lo usas)
+router.post("/refresh", generateCsrf, logCsrfDetails, refresh);
+
+// 🚪 Cerrar sesión (CSRF + cookie + JWT si lo usas)
+router.post("/logout", generateCsrf, logCsrfDetails, logout);
+
+/* -------------------------------------------------------------------------- */
+/* 🔒 RUTAS CON SOLO JWT (sin CSRF)                                           */
+/* -------------------------------------------------------------------------- */
+
 router.post("/verify-token", verifyToken);
+router.get("/me", authenticateToken, getSessionInfo);
 
 export default router;

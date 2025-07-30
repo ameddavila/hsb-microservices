@@ -9,8 +9,8 @@ import { checkRole } from "@/middlewares/checkRole";
 
 const router = Router();
 
-router.post("/", authenticateToken, checkRole(["admin"]), createRole);
-router.get("/", authenticateToken, checkRole(["admin"]), getAllRoles);
-router.get("/:id", authenticateToken, checkRole(["admin"]), getRoleById);
+router.post("/", authenticateToken, checkRole(["Administrador"]), createRole);
+router.get("/", authenticateToken, checkRole(["Administrador"]), getAllRoles);
+router.get("/:id", authenticateToken, checkRole(["Administrador"]), getRoleById);
 
 export default router;

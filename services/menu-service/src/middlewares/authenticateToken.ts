@@ -1,7 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+
+interface CustomJwtPayload {
+  id: string;
+  username: string;
+  email: string;
+  dni: string;
+  role: string;
+  permissions: string[];
+  iat?: number;
+  exp?: number;
+}
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -10,6 +21,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
     dni: string;
     role: string;
+    permissions: string[];
   };
 }
 
@@ -20,31 +32,42 @@ export const authenticateToken = (
 ) => {
   const accessToken = req.cookies?.accessToken;
   const csrfHeader = req.headers["x-csrf-token"];
-  const csrfToken = req.cookies?.csrfToken;
+  const csrfCookie = req.cookies?.csrfToken;
 
-  // 🔐 Verificar presencia de tokens
+  console.log("🛡️ Middleware: authenticateToken");
+  console.log("📥 Cookies recibidas:", req.cookies);
+  console.log("📥 Header x-csrf-token:", csrfHeader);
+
   if (!accessToken) {
+    console.warn("❌ [Auth] Token no encontrado en cookies");
     return res.status(401).json({ error: "Access token no encontrado" });
   }
 
-  if (!csrfToken || !csrfHeader || csrfToken !== String(csrfHeader)) {
-    return res.status(403).json({ error: "CSRF token inválidoaaaa" });
+  if (!csrfHeader || !csrfCookie || csrfHeader !== csrfCookie) {
+    console.warn("⚠️ [Auth] CSRF token inválido");
+    console.warn("🧩 Header CSRF:", csrfHeader);
+    console.warn("🧩 Cookie CSRF:", csrfCookie);
+    return res.status(403).json({ error: "CSRF token inválido" });
   }
 
   try {
-    const decoded = jwt.verify(accessToken, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(accessToken, JWT_SECRET) as CustomJwtPayload;
 
-    // Puedes usar solo los campos que te interesen
     req.user = {
       id: decoded.id,
       username: decoded.username,
       email: decoded.email,
       dni: decoded.dni,
       role: decoded.role,
+      permissions: decoded.permissions || [],
     };
+
+    console.log("✅ [Auth] Token verificado correctamente.");
+    console.log("👤 Usuario:", req.user);
 
     next();
   } catch (error) {
+    console.error("❌ [Auth] Error al verificar token:", error);
     return res.status(403).json({ error: "Access token inválido o expirado" });
   }
 };

@@ -42,3 +42,12 @@ export const RegisterUserSchema = z.object({
     token: z.string().min(10),
     newPassword: z.string().min(8),
   });
+
+  export const UpdateUserSchema = z.object({
+  username: z.string().optional(),
+  email: z.string().email().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional(),
+  profileImage: z.string().optional(),
+});

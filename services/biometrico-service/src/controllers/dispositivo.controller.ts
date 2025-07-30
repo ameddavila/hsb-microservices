@@ -145,7 +145,12 @@ export const buscarDispositivosEnRed = async (req: Request, res: Response) => {
 
   try {
     const dispositivos = await obtenerDispositivosDesdeZKAgent(String(inicio), String(fin));
-    console.log(`✅ Se detectaron ${dispositivos.length} dispositivos activos.`);
+    if (dispositivos && dispositivos.length > 0) {
+      console.log(`✅ Se detectaron ${dispositivos.length} dispositivos activos.`);
+  } else {
+      console.log("⚠️ No se detectaron dispositivos activos.");
+  }
+  
     res.json({ success: true, dispositivos });
   } catch (error: any) {
     console.error("❌ Error al buscar dispositivos en red:", error);

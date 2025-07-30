@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
 import { sequelize } from "@/config/sequelize";
 import app from "./app";
 import { defineRelations } from "@/relationships/biometrico.relations";
+// Cargar variables de entorno antes de cualquier otra importación
+dotenv.config();
 
 const PORT = process.env.PORT || 3004;
 

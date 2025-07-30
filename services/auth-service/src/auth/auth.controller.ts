@@ -9,6 +9,7 @@ import {
   generateCsrfToken,
 } from "@utils/token";
 import { VerifyTokenSchema } from "./auth.validator";
+import { AuthenticatedRequest } from "../types/express";
 
 // Validación de login
 const LoginSchema = z.object({
@@ -33,6 +34,10 @@ const buildUserPayload = (user: any) => ({
   username: user.username,
   email: user.email,
   dni: user.dni,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  phone: user.phone,
+  profileImage: user.profileImage,
   roles: user.roles ?? [],
   permissions: user.permissions ?? [],
 });
@@ -70,7 +75,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         httpOnly: false,
         maxAge: ACCESS_TOKEN_EXPIRATION,
       })
-      .json({ user: payload });
+      .json({ user: payload, csrfToken });
   } catch (err: any) {
     console.error("❌ [Login] Error:", err.message);
     res.status(400).json({ error: err.message });
@@ -152,4 +157,48 @@ export const verifyToken = (req: Request, res: Response): void => {
     console.error("❌ [VerifyToken] Error:", errorMsg);
     res.status(status).json({ valid: false, error: errorMsg });
   }
+};
+
+// export const getSessionInfo = async (
+//   req: AuthenticatedRequest,
+//   res: Response
+// ): Promise<void> => {
+//   const user = req.user;
+
+//   if (!user) {
+//     res.status(401).json({ message: "No autenticado" });
+//     return;
+//   }
+
+//   res.json({
+//     user: {
+//       id: user.id,
+//       username: user.username,
+//       email: user.email,
+//     },
+//     roles: user.roles,
+//     permissions: user.permissions,
+//     csrfToken: req.csrfToken?.(),
+//   });
+// };
+
+export const getSessionInfo = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const user = req.user;
+
+  if (!user) {
+    res.status(401).json({ message: "No autenticado" });
+    return;
+  }
+ // console.log("👤 Usuario completo:", user);
+  const payload = buildUserPayload(user); // 👈 incluye los campos nuevos
+
+  res.json({ user: payload, csrfToken: req.csrfToken?.() });
+};
+
+export const getCsrfToken = (req: Request, res: Response) => {
+  const csrfToken = req.csrfToken(); // ya está garantizado por middleware
+  res.status(200).json({ csrfToken });
 };

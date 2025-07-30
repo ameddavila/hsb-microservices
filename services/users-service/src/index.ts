@@ -11,7 +11,7 @@ async function main() {
     await sequelize.authenticate();
     console.log("✅ Conectado correctamente a la base de datos.");
 
-    await sequelize.sync(); // Si deseas sincronizar modelos en desarrollo
+    sequelize.sync(); // o { force: true } si estás en desarrollo
 
     app.listen(PORT, () => {
       console.log(`🚀 Users-Service corriendo en http://localhost:${PORT}`);

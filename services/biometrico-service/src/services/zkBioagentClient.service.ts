@@ -1,34 +1,85 @@
 import axios from "axios";
-import { DispositivoResponse, ZKUsuario, ZKUsuarioResponse } from "@/types/types"; // Asegúrate que esté correctamente definido
+import {
+  DispositivoResponse,
+  ZKUsuario,
+  ZKUsuarioResponse,
+} from "@/types/types";
 
-// 🔧 URL base del microservicio zk-bioagent
-const ZK_AGENT_BASE_URL = process.env.ZK_AGENT_BASE_URL || "http://localhost:3010";
+// 🔧 Configuración centralizada de Axios
+const ZK_AGENT_BASE_URL =
+  process.env.ZK_AGENT_BASE_URL || "http://localhost:3010";
 
-export const obtenerDispositivosDesdeZKAgent = async (inicio: string, fin: string) => {
+const zkAgentApi = axios.create({
+  baseURL: `${ZK_AGENT_BASE_URL}/api/biometria`,
+  timeout: 10000,
+});
+
+// 📌 Manejo genérico de errores
+const handleApiError = (error: any, contexto: string) => {
+  const message =
+    error.response?.data?.mensaje || error.message || "Error desconocido";
+  console.error(`❌ Error en ${contexto}:`, message);
+  throw new Error(`Error al ${contexto}: ${message}`);
+};
+
+// 🚀 Obtener dispositivos escaneados
+export const obtenerDispositivosDesdeZKAgent = async (
+  inicio: string,
+  fin: string
+) => {
   try {
-    const res = await axios.get<DispositivoResponse>(
-      `${ZK_AGENT_BASE_URL}/api/biometria/scan/full`,
-      {
-        params: { inicio, fin }
-      }
-    );
-
-    return res.data.dispositivos || [];
-  } catch (error: any) {
-    console.error("❌ Error al obtener dispositivos desde zk-bioagent:", error.message);
-    throw new Error("No se pudo obtener dispositivos desde zk-bioagent");
+    const { data } = await zkAgentApi.get<DispositivoResponse>("/scan/full", {
+      params: { inicio, fin },
+    });
+    return data.dispositivos || [];
+  } catch (error) {
+    handleApiError(error, "obtener dispositivos desde zk-bioagent");
   }
 };
 
+// 🚀 Cliente para usuarios ZK
 export class ZKAgentClient {
+  /**
+   * Obtiene la lista de usuarios desde un dispositivo.
+   * Retorna un array vacío si no hay usuarios válidos.
+   */
   static async obtenerUsuarios(ip: string): Promise<ZKUsuario[]> {
-    const url = `${ZK_AGENT_BASE_URL}/api/biometria/usuarios?ip=${ip}`;
-    const res = await axios.get<ZKUsuarioResponse>(url);
+    try {
+      const { data } = await zkAgentApi.get<ZKUsuarioResponse>("/usuarios", {
+        params: { ip },
+      });
 
-    if (res.data.success && res.data.usuarios) {
-      return res.data.usuarios;
+      if (data.success && data.usuarios) {
+        return data.usuarios;
+      }
+
+      console.warn(`⚠️ Respuesta sin usuarios desde dispositivo ${ip}`);
+      return [];
+    } catch (error) {
+      handleApiError(error, `obtener usuarios del dispositivo ${ip}`);
+      throw new Error(`No se pudo obtener usuarios del dispositivo ${ip}`);
     }
+  }
 
-    throw new Error("Error al obtener usuarios del dispositivo");
+  /**
+   * Consulta el estado biométrico de un usuario específico.
+   * Retorna null si falla.
+   */
+  static async consultarEstadoUsuario(
+    ip: string,
+    tipo: string,
+    codigoEmpleado: string
+  ): Promise<any | null> {
+    try {
+      const { data } = await zkAgentApi.get("/usuario", {
+        params: { ip, tipo, codigos: codigoEmpleado },
+      });
+      return data;
+    } catch (error) {
+      handleApiError(
+        error,
+        `consultar estado de usuario ${codigoEmpleado} en ${ip}`
+      );
+    }
   }
 }

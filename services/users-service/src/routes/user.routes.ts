@@ -1,10 +1,12 @@
 import { Router } from "express";
+import { uploadProfileImage } from "@/utils/upload";
 import {
   createUser,
   getAllUsers,
   getUserById,
   assignRole,
   getUserWithRolesAndPermissions,
+  updateUser,
 } from "@/controllers/user.controller";
 
 import { authenticateToken } from "@/middlewares/authenticateToken";
@@ -12,46 +14,60 @@ import { checkRole } from "@/middlewares/checkRole";
 
 const router = Router();
 
-/**
- * 🔒 RUTAS PROTEGIDAS PARA ADMINISTRADORES
- * Solo usuarios con rol "Administrador" podrán acceder
- */
+/* =============================================================
+   📌 RUTAS PROTEGIDAS - SOLO PARA USUARIOS CON ROL "Administrador"
+   Estas rutas requieren JWT válido + verificación de rol
+   ============================================================= */
 
-// 📌 Crear usuario manualmente (poco usado, ya que existe /register en rutas públicas)
-router.post("/", authenticateToken, checkRole(["Administrador"]), createUser);
-
-// 📌 Obtener todos los usuarios
+// 👉 Obtener todos los usuarios (usado en la lista de Usuarios del frontend)
 router.get("/", authenticateToken, checkRole(["Administrador"]), getAllUsers);
 
-// 📌 Asignar rol a un usuario
-router.post("/assign-role", authenticateToken, checkRole(["Administrador"]), assignRole);
+// 👉 Obtener usuario por ID (detalle para editar)
+router.get("/:id", authenticateToken, checkRole(["Administrador"]), getUserById);
 
-/**
- * 🔍 Obtener usuario por ID
- * Esta ruta está PROTEGIDA solo si no es llamada internamente.
- * Permite que `auth-service` pueda consumirla desde `user-client.service.ts`
- */
+// 👉 Crear nuevo usuario con imagen de perfil (formulario con FormData)
+router.post(
+  "/",
+  authenticateToken,
+  checkRole(["Administrador"]),
+  uploadProfileImage.single("profileImage"),
+  createUser
+);
+
+// 👉 Actualizar usuario con imagen (edición con FormData)
+router.put(
+  "/:id",
+  authenticateToken,
+  checkRole(["Administrador"]),
+  uploadProfileImage.single("profileImage"),
+  updateUser
+);
+
+// 👉 Asignar rol a un usuario
+router.post(
+  "/assign-role",
+  authenticateToken,
+  checkRole(["Administrador"]),
+  assignRole
+);
+
+/* =============================================================
+   🔄 RUTA SEMI-PÚBLICA (ACCESO INTERNO ENTRE MICROSERVICIOS)
+   Si el header "x-internal-call" está presente, omite auth
+   ============================================================= */
+
 router.get(
   "/:id/roles-permissions",
-  // Middleware condicional: si es llamada interna, omite verificación de token
   (req, res, next) => {
     if (req.headers["x-internal-call"] === "true") {
       console.log("🔁 Llamada interna detectada, sin verificación de token");
       return next();
     }
-    // Si no es interna, aplicar auth + rol
     return authenticateToken(req, res, () =>
       checkRole(["Administrador"])(req, res, next)
     );
   },
   getUserWithRolesAndPermissions
 );
-
-/**
- * ✅ RUTA ABIERTA (PROBABLEMENTE PARA EL FRONT DE REGISTRO)
- * El registro se maneja como una ruta PÚBLICA y no debe requerir token.
- * Esta ruta debería estar en un archivo separado de rutas públicas, ej: `auth.routes.ts` o `public.routes.ts`.
- */
-router.get("/:id", getUserById); // Puedes moverla a públicas si es usada por /auth
 
 export default router;
